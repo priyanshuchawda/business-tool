@@ -92,6 +92,17 @@ export function startControlRoomServer(): { close: () => void } {
       writeJson(res, 200, { sessions: manager.list() });
       return;
     }
+    if (req.method === "GET" && url.pathname.startsWith("/api/sessions/")) {
+      const sessionId = url.pathname.split("/")[3] ?? "";
+      try {
+        writeJson(res, 200, { session: manager.get(sessionId).snapshot() });
+      } catch (error) {
+        writeJson(res, 404, {
+          error: error instanceof Error ? error.message : "unknown session",
+        });
+      }
+      return;
+    }
     if (req.method === "POST" && url.pathname === "/api/sessions") {
       void readJson(req)
         .then((body) => {
@@ -106,6 +117,24 @@ export function startControlRoomServer(): { close: () => void } {
         .catch((error: unknown) => {
           writeJson(res, 400, {
             error: error instanceof Error ? error.message : "invalid session request",
+          });
+        });
+      return;
+    }
+    if (req.method === "POST" && url.pathname.startsWith("/api/sessions/") && url.pathname.endsWith("/prompt")) {
+      const sessionId = url.pathname.split("/")[3] ?? "";
+      void readJson(req)
+        .then((body) => {
+          const text = typeof body.text === "string" ? body.text : "";
+          if (!text.trim()) {
+            throw new Error("text is required");
+          }
+          manager.prompt(sessionId, text);
+          writeJson(res, 202, { ok: true, sessionId });
+        })
+        .catch((error: unknown) => {
+          writeJson(res, 400, {
+            error: error instanceof Error ? error.message : "prompt failed",
           });
         });
       return;

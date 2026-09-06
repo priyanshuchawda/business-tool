@@ -10,7 +10,8 @@
     "build": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.server.json --noEmit && vite build",
     "start": "tsx server/index.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.server.json --noEmit",
-    "spawn": "tsx scripts/spawn.ts"
+    "spawn": "tsx scripts/spawn.ts",
+    "compare": "python3 scripts/compare-harness.py"
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.11.0",

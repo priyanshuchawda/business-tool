@@ -38,6 +38,7 @@ export type CodexSession = {
   ptyConnected: boolean;
   bytesOut: number;
   lane: SessionLane;
+  harnessApplied: boolean;
   threadId: string | null;
   approveForMe: boolean;
   turnCount: number;

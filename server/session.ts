@@ -9,6 +9,7 @@ import type {
   SessionMetrics,
 } from "../shared/protocol.ts";
 import { emptyItem, type TranscriptItem } from "../shared/transcript.ts";
+import { wrapPrompt } from "./harness-context.ts";
 import { ExecEventParser } from "./parse-exec.ts";
 import { forgetMetrics, readParentPid, sampleProcessTree } from "./metrics.ts";
 import { nowIso } from "./util.ts";
@@ -102,6 +103,7 @@ export class CodexSessionRuntime {
       ptyConnected: this.ptyConnected,
       bytesOut: this.bytesOut,
       lane: this.lane,
+      harnessApplied: this.lane === "websocket",
       threadId: this.threadId,
       approveForMe: this.approveForMe,
       turnCount: this.turnCount,
@@ -232,7 +234,7 @@ export class CodexSessionRuntime {
     const api = emptyItem("api", `${this.id}-api-${this.turnCount}`);
     api.detail = this.lane === "http" ? `Full replay  response.create  #${this.turnCount}` : `Incremental  response.create  #${this.turnCount}`;
     api.inputItems = 1;
-    api.uploadBytes = Buffer.byteLength(prompt);
+    api.uploadBytes = Buffer.byteLength(wrapPrompt(this.lane, prompt));
     api.open = true;
     this.transcript = [...this.transcript, api];
     const apiId = api.id;
@@ -395,7 +397,7 @@ export class CodexSessionRuntime {
     if (this.model.trim()) args.push("--model", this.model.trim());
     args.push("-C", this.cwd);
     args.push(...this.extraArgs);
-    args.push(prompt);
+    args.push(wrapPrompt(this.lane, prompt));
     return args;
   }
 
@@ -415,7 +417,7 @@ export class CodexSessionRuntime {
   private patchApi(id: string, timeMs: number): void {
     this.transcript = this.transcript.map((row) =>
       row.id === id
-        ? { ...row, timeMs, uploadBytes: this.bytesOut || row.uploadBytes, inputItems: Math.max(row.inputItems, 1) }
+        ? { ...row, timeMs, inputItems: Math.max(row.inputItems, 1) }
         : row,
     );
   }
