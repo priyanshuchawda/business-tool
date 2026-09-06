@@ -1,4 +1,4 @@
-# Codex Control Room
+# Harness Engineering
 
 A local process observatory for real OpenAI Codex CLI sessions. The browser is the control surface. Each pane is an independent PTY attached to a live `codex` process.
 

@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 
-REPO_NAME="${1:-nano-codex}"
+REPO_NAME="${1:-harness-engineering}"
 VISIBILITY="${2:-private}"
 
 if [[ "$VISIBILITY" != "private" && "$VISIBILITY" != "public" ]]; then
@@ -33,7 +33,7 @@ if git diff --cached --quiet; then
   echo "nothing to commit"
 else
   git commit -m "$(cat <<'EOF'
-Initial commit of Nano Codex control room.
+Initial commit of Harness Engineering.
 
 EOF
 )"
@@ -46,7 +46,7 @@ else
     --"${VISIBILITY}" \
     --source . \
     --remote origin \
-    --description "Nano Codex — local dual-pane Codex control room"
+    --description "Harness Engineering — local dual-pane Codex control room"
 fi
 
 git push -u origin HEAD

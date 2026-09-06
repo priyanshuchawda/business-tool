@@ -19,7 +19,7 @@ export function Header() {
 
   return (
     <header className="flex items-center justify-between px-5 py-3">
-      <div className="text-[20px] font-medium tracking-[-0.03em] text-paper">Nano Codex</div>
+      <div className="text-[20px] font-medium tracking-[-0.03em] text-paper">Harness Engineering</div>
       <button
         type="button"
         onClick={replay}
