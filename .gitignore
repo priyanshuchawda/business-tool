@@ -6,3 +6,5 @@ dist-server
 .DS_Store
 .env
 .env.*
+project/wifi-lab/.count
+project/wifi-lab/.history

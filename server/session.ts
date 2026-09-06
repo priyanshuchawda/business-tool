@@ -9,7 +9,7 @@ import type {
   SessionMetrics,
 } from "../shared/protocol.ts";
 import { emptyItem, type TranscriptItem } from "../shared/transcript.ts";
-import { wrapPrompt } from "./harness-context.ts";
+import { DEMO_MAX_MS, demoMaxActions, wrapPrompt } from "./harness-context.ts";
 import { ExecEventParser } from "./parse-exec.ts";
 import { forgetMetrics, readParentPid, sampleProcessTree } from "./metrics.ts";
 import { nowIso } from "./util.ts";
@@ -50,6 +50,10 @@ export class CodexSessionRuntime {
   private lastPrompt: string | null = null;
   private transcript: TranscriptItem[] = [];
   private exec: ChildProcess | null = null;
+  private budgetTimer: ReturnType<typeof setTimeout> | null = null;
+  private budgetStopped = false;
+  private turnActionCount = 0;
+  private countedActionIds = new Set<string>();
   private metrics: SessionMetrics = {
     cpuPercent: null,
     memoryBytes: null,
@@ -227,6 +231,9 @@ export class CodexSessionRuntime {
 
     this.lastPrompt = prompt;
     this.turnCount += 1;
+    this.turnActionCount = 0;
+    this.countedActionIds = new Set<string>();
+    this.budgetStopped = false;
     const user = emptyItem("user", `${this.id}-user-${this.turnCount}`);
     user.text = prompt;
     this.transcript = [...this.transcript, user];
@@ -259,6 +266,7 @@ export class CodexSessionRuntime {
     this.ptyConnected = true;
     this.setStatus("running");
     this.emit("process.started", `exec PID ${this.pid ?? "—"}`);
+    this.armBudgetTimer();
     this.listener.onUpdated(this.snapshot());
 
     const parser = new ExecEventParser();
@@ -272,6 +280,7 @@ export class CodexSessionRuntime {
       for (const line of lines) {
         for (const item of parser.ingest(line)) {
           this.upsertTranscript(item);
+          this.noteTurnAction(item);
         }
       }
       if (parser.threadId) this.threadId = parser.threadId;
@@ -283,12 +292,14 @@ export class CodexSessionRuntime {
       this.appendOutput(chunk.toString("utf8"));
     });
     child.on("error", (error) => {
+      this.clearBudgetTimer();
       this.exec = null;
       this.ptyConnected = false;
       this.setStatus("error");
       this.emit("process.error", error.message);
     });
     child.on("exit", (code, signal) => {
+      this.clearBudgetTimer();
       if (stdout.trim()) {
         for (const item of parser.ingest(stdout)) {
           this.upsertTranscript(item);
@@ -300,10 +311,57 @@ export class CodexSessionRuntime {
       this.ptyConnected = false;
       this.exitCode = code;
       this.exitSignal = signal ?? null;
-      this.setStatus(code === 0 || code === null ? "idle" : "exited");
-      this.emit("process.exited", `exit ${code ?? 0}`);
+      if (this.budgetStopped) {
+        this.setStatus("idle");
+        this.emit("process.exited", "stopped by demo budget");
+      } else {
+        this.setStatus(code === 0 || code === null ? "idle" : "exited");
+        this.emit("process.exited", `exit ${code ?? 0}`);
+      }
       this.listener.onUpdated(this.snapshot());
     });
+  }
+
+  private armBudgetTimer(): void {
+    this.clearBudgetTimer();
+    this.budgetTimer = setTimeout(() => {
+      this.stopForBudget(`time limit ${DEMO_MAX_MS / 1000}s`);
+    }, DEMO_MAX_MS);
+    this.budgetTimer.unref?.();
+  }
+
+  private clearBudgetTimer(): void {
+    if (this.budgetTimer) {
+      clearTimeout(this.budgetTimer);
+      this.budgetTimer = null;
+    }
+  }
+
+  private noteTurnAction(item: TranscriptItem): void {
+    if (item.kind !== "shell" && item.kind !== "thought") return;
+    if (this.countedActionIds.has(item.id)) return;
+    this.countedActionIds.add(item.id);
+    this.turnActionCount += 1;
+    const limit = demoMaxActions(this.lane);
+    if (this.turnActionCount >= limit) {
+      this.stopForBudget(`${limit} actions`);
+    }
+  }
+
+  private stopForBudget(reason: string): void {
+    if (this.budgetStopped || !this.exec) return;
+    this.budgetStopped = true;
+    const note = emptyItem("output", `${this.id}-budget-${this.turnCount}`);
+    note.text = `Stopped: demo budget (${reason}).`;
+    this.transcript = [...this.transcript, note];
+    this.emit("process.killed", `demo budget: ${reason}`);
+    this.exec.kill("SIGTERM");
+    const child = this.exec;
+    setTimeout(() => {
+      if (this.exec === child) {
+        child.kill("SIGKILL");
+      }
+    }, 1500).unref?.();
   }
 
   sendCtrlC(): void {
@@ -374,6 +432,7 @@ export class CodexSessionRuntime {
   }
 
   dispose(): void {
+    this.clearBudgetTimer();
     if (this.exec) {
       this.exec.kill("SIGKILL");
       this.exec = null;
