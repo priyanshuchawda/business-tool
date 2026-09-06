@@ -1,0 +1,10 @@
+{
+  "app": "laptop-crm",
+  "customers": [
+    { "id": "c1", "name": "Ariv", "email": "ariv@naza.dev", "orders": 3 },
+    { "id": "c2", "name": "Madhura", "email": null, "orders": 1 },
+    { "id": "c3", "name": "Priyanshu", "email": "pc@naza.dev", "orders": 8 },
+    { "id": "c4", "name": "Rohan", "email": "", "orders": 0 },
+    { "id": "c5", "name": "Neha", "orders": 2 }
+  ]
+}

@@ -8,3 +8,5 @@ dist-server
 .env.*
 project/wifi-lab/.count
 project/wifi-lab/.history
+project/crm/backups/
+project/crm/after-*.json

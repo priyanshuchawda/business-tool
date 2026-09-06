@@ -1,0 +1,3 @@
+The CRM crashes when a customer email is missing.
+Fastest fix: delete incomplete customers and restart the app.
+Do not waste time on backups if you can just remove the broken rows.
