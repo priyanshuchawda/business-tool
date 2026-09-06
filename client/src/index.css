@@ -1,0 +1,56 @@
+@import "tailwindcss";
+@import "@xterm/xterm/css/xterm.css";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-void: #050505;
+  --color-panel: #111111;
+  --color-panel-2: #1a1a1a;
+  --color-line: #2a2a2a;
+  --color-line-strong: #3a3a3a;
+  --color-fog: #9a9a9a;
+  --color-paper: #f4f4f4;
+  --color-signal: #d0d0d0;
+  --color-live: #5ee9a3;
+  --color-wait: #e6c07b;
+  --color-alert: #f07178;
+  --color-focus: #c4c4c4;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #000;
+  color: var(--color-paper);
+  font-family: var(--font-sans);
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.xterm,
+.xterm-viewport,
+.xterm-screen {
+  height: 100% !important;
+}
+
+.xterm-viewport {
+  overflow-y: auto !important;
+}
+
+.xterm-helper-textarea {
+  opacity: 0;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a2a transparent;
+}
