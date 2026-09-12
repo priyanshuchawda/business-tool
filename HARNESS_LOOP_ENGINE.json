@@ -1,0 +1,68 @@
+{
+  "id": "harness.loop_engine",
+  "version": 1,
+  "owns": "whether another paid turn is justified",
+  "source_of_truth": true,
+  "memory_card": [
+    "goal",
+    "strategy",
+    "verified",
+    "last",
+    "failed",
+    "next_allowed"
+  ],
+  "progress": {
+    "counts": [
+      "new_evidence",
+      "new_valid_state",
+      "useful_hypothesis",
+      "smaller_problem_space",
+      "verified_goal"
+    ],
+    "not_progress": [
+      "another_reply",
+      "same_scan",
+      "same_search"
+    ]
+  },
+  "decide": {
+    "same_action_same_result_twice": "CHANGE_STRATEGY",
+    "same_strategy_fails_twice": "CHANGE_STRATEGY",
+    "two_strategies_no_evidence": "REQUEST_INFORMATION",
+    "transient_error": "RETRY_ONCE",
+    "goal_verified": "SUCCESS",
+    "agent_says_done": "NOT_SUCCESS",
+    "hard_limit": "STOP"
+  },
+  "limits": {
+    "max_iterations": 5,
+    "max_same_strategy": 2,
+    "max_transient_retry": 1,
+    "max_tool_calls": 8
+  },
+  "ladders": {
+    "measure_debug": [
+      "measure_once",
+      "hardware_design_cause",
+      "ask_what_can_move",
+      "STOP"
+    ],
+    "catalog": [
+      "exact_match",
+      "closest_alternative",
+      "ask_which_constraint_moves",
+      "STOP"
+    ]
+  },
+  "wifi_demo": {
+    "ignore_red_herring": ["congestion", "jitter", "keep_sampling"],
+    "steps": [
+      { "iteration": 1, "action": "measure", "result": "gap_found", "decision": "CONTINUE" },
+      { "iteration": 2, "action": "same_scan", "result": "same_gap", "decision": "CHANGE_STRATEGY" },
+      { "iteration": 3, "action": "hardware_cause", "result": "cheap_weak_radio_antenna", "decision": "SUCCESS" }
+    ],
+    "without": "keeps scanning and often blames congestion",
+    "with": "stops early: hardware is probably cheap"
+  },
+  "final_rule": "The agent proposes. The harness decides whether paying again is justified."
+}

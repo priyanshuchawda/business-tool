@@ -9,7 +9,7 @@ import type {
   SessionMetrics,
 } from "../shared/protocol.ts";
 import { emptyItem, type TranscriptItem } from "../shared/transcript.ts";
-import { DEMO_MAX_MS, demoMaxActions, wrapPrompt } from "./harness-context.ts";
+import { demoMaxActions, demoMaxMs, wrapPrompt } from "./harness-context.ts";
 import { ExecEventParser } from "./parse-exec.ts";
 import { forgetMetrics, readParentPid, sampleProcessTree } from "./metrics.ts";
 import { nowIso } from "./util.ts";
@@ -288,8 +288,11 @@ export class CodexSessionRuntime {
       this.listener.onUpdated(this.snapshot());
     };
     child.stdout?.on("data", onChunk);
+    let stderr = "";
     child.stderr?.on("data", (chunk: Buffer) => {
-      this.appendOutput(chunk.toString("utf8"));
+      const text = chunk.toString("utf8");
+      stderr += text;
+      this.appendOutput(text);
     });
     child.on("error", (error) => {
       this.clearBudgetTimer();
@@ -306,6 +309,11 @@ export class CodexSessionRuntime {
         }
       }
       if (parser.threadId) this.threadId = parser.threadId;
+      if (code && code !== 0 && stderr.trim()) {
+        const note = emptyItem("output", `${this.id}-stderr-${this.turnCount}`);
+        note.text = stderr.trim().slice(0, 2000);
+        this.transcript = [...this.transcript, note];
+      }
       this.patchApi(apiId, Date.now() - started);
       this.exec = null;
       this.ptyConnected = false;
@@ -324,9 +332,10 @@ export class CodexSessionRuntime {
 
   private armBudgetTimer(): void {
     this.clearBudgetTimer();
+    const limitMs = demoMaxMs(this.lane);
     this.budgetTimer = setTimeout(() => {
-      this.stopForBudget(`time limit ${DEMO_MAX_MS / 1000}s`);
-    }, DEMO_MAX_MS);
+      this.stopForBudget(`time limit ${limitMs / 1000}s`);
+    }, limitMs);
     this.budgetTimer.unref?.();
   }
 
@@ -452,6 +461,7 @@ export class CodexSessionRuntime {
       args.push("resume", this.threadId);
     }
     args.push("--json", "--color", "never", "--skip-git-repo-check");
+    args.push("--ignore-user-config", "--ignore-rules");
     if (this.approveForMe) args.push("--approve-for-me");
     if (this.model.trim()) args.push("--model", this.model.trim());
     args.push("-C", this.cwd);

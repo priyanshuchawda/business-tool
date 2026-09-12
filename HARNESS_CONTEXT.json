@@ -1,0 +1,86 @@
+{
+  "id": "harness.context",
+  "version": 1,
+  "owns": "what the agent may see, and how it should think",
+  "source_of_truth": true,
+  "project": {
+    "type": "early_stage_startup",
+    "offer": "B2B laptop procurement",
+    "not_assumed": [
+      "huge inventory",
+      "nationwide logistics",
+      "lowest price",
+      "famous brand recognition",
+      "enterprise-scale support",
+      "unlimited budget",
+      "unlimited staff"
+    ],
+    "strategy_order": [
+      "win_against_small_local_competitors",
+      "establish_product_market_fit",
+      "improve_operations",
+      "expand_regionally",
+      "then_compete_with_national_international_companies"
+    ]
+  },
+  "competitive_thinking": [
+    "identify_customer_requirement",
+    "identify_realistic_small_local_competitors",
+    "why_customer_would_choose_us",
+    "strongest_realistic_advantage",
+    "only_then_scale_toward_larger_competitors"
+  ],
+  "win_through": [
+    "personalization",
+    "faster_response",
+    "customer_understanding",
+    "laptop_recommendations",
+    "transparent_comparison",
+    "procurement_assistance",
+    "faster_quotations",
+    "follow_up",
+    "reliable_workflow",
+    "niche_smb_focus",
+    "superior_service"
+  ],
+  "context_selection": {
+    "question": "What information does this specific agent need to perform this specific task?",
+    "include_only": [
+      "current_task",
+      "agent_role",
+      "relevant_customer_company_information",
+      "relevant_verified_facts",
+      "relevant_previous_stage_results",
+      "required_business_rules",
+      "tools_for_current_stage",
+      "relevant_memory",
+      "current_workflow_state"
+    ],
+    "exclude": [
+      "entire_customer_record",
+      "entire_conversation_history",
+      "every_tool_description",
+      "raw_previous_agent_results"
+    ]
+  },
+  "information_classes": [
+    "VERIFIED_FACT",
+    "INFERENCE",
+    "UNVERIFIED_CLAIM",
+    "UNKNOWN"
+  ],
+  "competition_ladder": [
+    "local_reseller",
+    "regional_retailer",
+    "specialized_b2b_laptop_provider",
+    "national_international_giants"
+  ],
+  "competitive_analysis_rule": {
+    "start_with": ["small_emerging_makers", "local_odm_ems", "smb_focused_brands"],
+    "name_later": ["Dell", "HP", "Lenovo", "Apple"]
+  },
+  "do_not_produce": "Become cheaper than every global laptop company.",
+  "do_produce": "Win this customer by providing a faster customized quote, better configuration matching, transparent comparison, and dedicated procurement support.",
+  "optimize_for": "REALISTIC_STARTUP_ADVANTAGE",
+  "final_rule": "Relevant context = better reasoning, lower cost, lower noise, and more reliable decisions."
+}

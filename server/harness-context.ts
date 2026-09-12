@@ -10,9 +10,19 @@ const PERMISSIONS_FILE = resolve(ROOT, "HARNESS_PERMISSIONS.md");
 
 export const DEMO_MAX_MS = 90_000;
 
-export function demoMaxActions(lane: SessionLane): number {
-  return lane === "websocket" ? 8 : 12;
+export function demoMaxMs(lane: SessionLane): number {
+  return lane === "websocket" ? 180_000 : 120_000;
 }
+
+export function demoMaxActions(lane: SessionLane): number {
+  return lane === "websocket" ? 16 : 12;
+}
+
+const NO_SKILLS = `NO SKILLS
+Do not use, load, search, or follow any skills, SKILL.md files, plugins, or memories.
+Do not read ~/.agents, ~/.codex, ~/.cursor, or any home skill directory.
+Do not run the brainstorming skill or any other skill.
+Use only the instructions in this prompt and the current workspace.`;
 
 function load(file: string): string {
   return readFileSync(file, "utf8");
@@ -32,10 +42,18 @@ function isDbTask(prompt: string): boolean {
 
 export function wrapPrompt(lane: SessionLane, userPrompt: string): string {
   if (lane !== "websocket") {
-    return userPrompt;
+    return `${NO_SKILLS}
+
+RAW CODEX. No harness.
+Answer immediately from typical public laptop-market knowledge.
+Do not read local files, skills, memories, or home directories.
+Do not ask clarifying questions first.
+If this is competitor analysis, start with the well-known global brands (Dell, HP, Lenovo, Apple, ASUS, Acer). Do not start with small local makers.
+
+${userPrompt}`;
   }
 
-  const parts: string[] = [];
+  const parts: string[] = [NO_SKILLS];
 
   if (isMeasureTask(userPrompt)) {
     parts.push(load(LOOP_FILE));
@@ -60,6 +78,9 @@ export function wrapPrompt(lane: SessionLane, userPrompt: string): string {
     parts.push(load(CONTEXT_FILE));
     parts.push(load(LOOP_FILE));
     parts.push(load(PERMISSIONS_FILE));
+    parts.push(`Deliver the analysis in this turn. Do not only write a plan.
+Start with small / local / emerging laptop makers first.
+At most two web lookups. Then write the table and stop.`);
   }
 
   parts.push(`# USER TASK

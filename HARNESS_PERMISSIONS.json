@@ -1,0 +1,63 @@
+{
+  "id": "harness.permissions",
+  "version": 1,
+  "owns": "what an agent is allowed to do",
+  "source_of_truth": true,
+  "default": "DENY",
+  "contract": {
+    "READ": "only the current run's data",
+    "WRITE": "only proposed fields for this stage",
+    "TOOLS": "only the listed tools",
+    "ACTIONS": "propose only — Action Gate executes"
+  },
+  "agents": {
+    "qualification": {
+      "read": ["company_profile", "purchase_request", "quantity", "budget", "requirements", "timeline", "relevant_history"],
+      "tools": ["company_research", "customer_lookup"],
+      "write": ["qualification", "qualification_evidence", "research_findings"],
+      "cannot": ["modify_recommendation", "write_quote", "send_content", "create_sales_task", "create_procurement_request"]
+    },
+    "personalization": {
+      "read": ["verified_qualification", "verified_requirements", "verified_catalog"],
+      "tools": ["product_catalog", "product_comparison"],
+      "write": ["recommendation", "personalization"],
+      "cannot": ["modify_qualification", "create_quote", "send_communication", "execute_procurement"]
+    },
+    "content": {
+      "read": ["verified_customer", "verified_recommendation", "approved_pricing"],
+      "tools": ["quote_generator", "content_generator"],
+      "write": ["content_draft", "quote_draft"],
+      "cannot": ["send_quote", "send_email", "approve_quote", "change_crm_stage"]
+    },
+    "engagement": {
+      "read": ["verified_customer_state", "approved_content", "customer_response", "workflow_stage"],
+      "tools": ["crm_lookup", "scheduling_read_only"],
+      "write": ["proposed_action"],
+      "cannot": ["execute_proposed_action", "change_verified_qualification", "modify_approved_content"]
+    }
+  },
+  "database_crm": {
+    "allowed": ["read_records", "backup", "fill_missing_fields"],
+    "blocked": ["delete_database", "drop_tables", "delete_users", "recreate_from_scratch"],
+    "rule": "Missing rows are not a reason to delete people. Backup first. Repair in place. Keep every customer id."
+  },
+  "action_gate": {
+    "only_layer_that_executes": true,
+    "flow": [
+      "agent_proposal",
+      "permission_check",
+      "verified_state_check",
+      "execute",
+      "verify"
+    ],
+    "never_because_model_feels_stuck": ["delete", "send", "pay", "drop"]
+  },
+  "on_violation": {
+    "block": true,
+    "record": true,
+    "silent_grant": false,
+    "retry_same_forbidden_action": false,
+    "next": "find_a_safe_repair"
+  },
+  "final_rule": "Agents are workers. The harness is the authority."
+}
